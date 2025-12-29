@@ -1,8 +1,9 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useLists } from '../hooks/useLists';
 
-type Step = 'selection' | 'standard-form' | 'advanced-form';
+type ListType = 'standard' | 'advanced';
 
 interface CreateListModalProps {
     visible: boolean;
@@ -10,162 +11,138 @@ interface CreateListModalProps {
 }
 
 export default function CreateListModal({ visible, onClose }: CreateListModalProps) {
-    const [step, setStep] = useState<Step>('selection');
+    const [listType, setListType] = useState<ListType>('standard');
+    const [title, setTitle] = useState('');
+    const { createList } = useLists();
 
-    const resetAndClose = () => {
-        setStep('selection');
+    const handleCreate = async () => {
+        if (!title.trim()) return;
+        await createList(title, listType);
+        setTitle('');
         onClose();
     };
 
-    const renderSelectionStep = () => (
-        <View className="flex-col gap-4">
-            <Text className="text-sm text-gray-500 mb-2">Choose the type of list you want to create.</Text>
-
-            <TouchableOpacity
-                className="flex-row items-center gap-4 rounded-xl border border-gray-100 bg-gray-50 p-4"
-                onPress={() => setStep('standard-form')}
-            >
-                <View className="flex h-14 w-14 items-center justify-center rounded-xl bg-green-100">
-                    <MaterialIcons name="checklist" size={24} color="#16a34a" />
-                </View>
-                <View className="flex-1">
-                    <Text className="font-bold text-gray-900">Create Standard List</Text>
-                    <Text className="text-xs text-gray-500 mt-1">Simple checklist for groceries, quick tasks, or daily reminders.</Text>
-                </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-                className="flex-row items-center gap-4 rounded-xl border border-gray-100 bg-gray-50 p-4"
-                onPress={() => setStep('advanced-form')}
-            >
-                <View className="flex h-14 w-14 items-center justify-center rounded-xl bg-purple-100">
-                    <MaterialIcons name="assignment-turned-in" size={24} color="#9333ea" />
-                </View>
-                <View className="flex-1">
-                    <Text className="font-bold text-gray-900">Create Advanced List</Text>
-                    <Text className="text-xs text-gray-500 mt-1">Detailed projects with descriptions, tags, assignees and due dates.</Text>
-                </View>
-            </TouchableOpacity>
-        </View>
-    );
-
-    const renderStandardForm = () => (
-        <View className="flex-col gap-5">
-            <TouchableOpacity
-                className="flex-row items-center gap-2 mb-2"
-                onPress={() => setStep('selection')}
-            >
-                <MaterialIcons name="arrow-back" size={14} color="#6b7280" />
-                <Text className="text-xs font-medium uppercase tracking-wide text-gray-500">Back to selection</Text>
-            </TouchableOpacity>
-
-            <View>
-                <Text className="text-sm font-medium text-gray-700 mb-1.5">List Name</Text>
-                <TextInput
-                    className="block w-full rounded-lg border border-gray-300 bg-white p-3 text-gray-900"
-                    placeholder="e.g., Grocery Run"
-                />
-            </View>
-
-            <View className="pt-2">
-                <TouchableOpacity className="flex items-center justify-center rounded-xl bg-primary px-4 py-3.5 shadow-sm">
-                    <Text className="text-sm font-semibold text-white">Create List</Text>
-                </TouchableOpacity>
-            </View>
-        </View>
-    );
-
-    const renderAdvancedForm = () => (
-        <View className="flex-col gap-5">
-            <TouchableOpacity
-                className="flex-row items-center gap-2 mb-2"
-                onPress={() => setStep('selection')}
-            >
-                <MaterialIcons name="arrow-back" size={14} color="#6b7280" />
-                <Text className="text-xs font-medium uppercase tracking-wide text-gray-500">Back to selection</Text>
-            </TouchableOpacity>
-
-            <View>
-                <Text className="text-sm font-medium text-gray-700 mb-1.5">List Name</Text>
-                <TextInput
-                    className="block w-full rounded-lg border border-gray-300 bg-white p-3 text-gray-900"
-                    placeholder="e.g., Q4 Marketing Plan"
-                />
-            </View>
-
-            <View>
-                <Text className="text-sm font-medium text-gray-700 mb-1.5">Description <Text className="text-gray-400 font-normal">(Optional)</Text></Text>
-                <TextInput
-                    className="block w-full rounded-lg border border-gray-300 bg-white p-3 text-gray-900 h-24"
-                    placeholder="Briefly describe the purpose..."
-                    multiline
-                    textAlignVertical="top"
-                />
-            </View>
-
-            <View className="flex-row gap-4">
-                <View className="flex-1">
-                    <Text className="text-sm font-medium text-gray-700 mb-1.5">Tags</Text>
-                    <View className="relative">
-                        <TouchableOpacity className="w-full rounded-lg bg-white p-3 border border-gray-300">
-                            <Text className="text-gray-400">Select tags</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-
-                <View className="flex-1">
-                    <Text className="text-sm font-medium text-gray-700 mb-1.5">Due Date</Text>
-                    <View className="relative">
-                        <TouchableOpacity className="w-full rounded-lg bg-white p-3 border border-gray-300">
-                            <Text className="text-gray-400">Select date</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </View>
-
-            <View className="pt-2">
-                <TouchableOpacity className="flex items-center justify-center rounded-xl bg-primary px-4 py-3.5 shadow-sm">
-                    <Text className="text-sm font-semibold text-white">Create Advanced List</Text>
-                </TouchableOpacity>
-            </View>
-        </View>
-    );
+    const isAdvanced = listType === 'advanced';
 
     return (
         <Modal
             animationType="slide"
             transparent={true}
             visible={visible}
-            onRequestClose={resetAndClose}
+            onRequestClose={onClose}
         >
-            <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                className="flex-1 justify-end"
-            >
-                {/* Backdrop */}
-                <TouchableOpacity
-                    className="absolute inset-0 bg-black/40"
-                    activeOpacity={1}
-                    onPress={resetAndClose}
-                />
+            <View className="flex-1 justify-end bg-black/40">
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    className="w-full bg-background-light dark:bg-background-dark rounded-t-3xl overflow-hidden shadow-2xl h-[85%]"
+                >
+                    {/* Header */}
+                    <View className="flex-row items-center justify-between p-4 pt-6 pb-2 z-20">
+                        <TouchableOpacity
+                            onPress={onClose}
+                            className="h-10 w-10 items-center justify-center rounded-full bg-gray-100 dark:bg-white/10"
+                        >
+                            <MaterialIcons name="close" size={24} className="text-gray-500 dark:text-gray-400" />
+                        </TouchableOpacity>
+                        <Text className="text-base font-semibold text-gray-900 dark:text-white opacity-0">New List</Text>
+                        <View className="h-10 w-10" />
+                    </View>
 
-                {/* Modal Content */}
-                <View className="bg-white rounded-t-2xl p-6 w-full max-h-[90%]">
-                    <View className="mb-5 flex-row items-center justify-between">
-                        <Text className="text-lg font-bold text-gray-900">Create New List</Text>
-                        <TouchableOpacity onPress={resetAndClose} className="p-1 bg-gray-100 rounded-full">
-                            <MaterialIcons name="close" size={20} color="#9ca3af" />
+                    <View className="flex-1 px-6 pt-4 pb-4">
+                        {/* List Name Input */}
+                        <View className="w-full mb-2">
+                            <TextInput
+                                autoFocus
+                                value={title}
+                                onChangeText={setTitle}
+                                className="w-full bg-transparent text-3xl font-medium text-gray-900 dark:text-white"
+                                placeholder="What are we planning?"
+                                placeholderTextColor="#cbd5e1"
+                                selectionColor="#135bec"
+                                style={{ fontSize: 30 }} // Fallback for native wind sizing issues sometimes
+                            />
+                            <View className="h-0.5 w-full bg-transparent border-b-2 border-primary mt-2" />
+                        </View>
+
+                        <View className="flex-row justify-between items-start mb-8">
+                            <Text className="text-sm text-gray-400 pt-1 leading-snug">
+                                Examples: "Weekly Groceries", "Q4 Roadmap"
+                            </Text>
+                            <Text className="text-xs font-medium text-gray-400 pt-1">{title.length}/50</Text>
+                        </View>
+
+                        {/* Toggle */}
+                        <View className="flex-row bg-gray-200 dark:bg-gray-800 p-1.5 rounded-xl mb-8">
+                            <TouchableOpacity
+                                onPress={() => setListType('standard')}
+                                className={`flex-1 items-center py-2.5 rounded-lg ${!isAdvanced ? 'bg-white shadow-sm' : ''}`}
+                            >
+                                <Text className={`text-sm font-semibold ${!isAdvanced ? 'text-primary' : 'text-gray-500'}`}>Standard</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() => setListType('advanced')}
+                                className={`flex-1 items-center py-2.5 rounded-lg ${isAdvanced ? 'bg-white shadow-sm' : ''}`}
+                            >
+                                <Text className={`text-sm font-semibold ${isAdvanced ? 'text-primary' : 'text-gray-500'}`}>Advanced</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Settings Section */}
+                        <View className={`transition-all duration-300 ${!isAdvanced ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
+                            <Text className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 px-1">List Settings</Text>
+
+                            <View className="space-y-3 gap-3">
+                                <TouchableOpacity disabled={!isAdvanced} className="w-full flex-row items-center justify-between p-4 bg-white dark:bg-gray-800/40 rounded-xl border border-gray-100 dark:border-gray-800">
+                                    <View className="flex-row items-center gap-3">
+                                        <View className="h-9 w-9 rounded-full bg-blue-50 dark:bg-blue-900/20 items-center justify-center">
+                                            <MaterialIcons name="group" size={20} color="#135bec" />
+                                        </View>
+                                        <Text className="text-sm font-semibold text-gray-700 dark:text-gray-200">Assignees</Text>
+                                    </View>
+                                    <View className="flex-row items-center gap-2">
+                                        <View className="h-6 w-6 rounded-full bg-primary items-center justify-center ring-2 ring-white">
+                                            <Text className="text-[10px] font-bold text-white">ME</Text>
+                                        </View>
+                                        <MaterialIcons name="chevron-right" size={20} color="#cbd5e1" />
+                                    </View>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity disabled={!isAdvanced} className="w-full flex-row items-center justify-between p-4 bg-white dark:bg-gray-800/40 rounded-xl border border-gray-100 dark:border-gray-800">
+                                    <View className="flex-row items-center gap-3">
+                                        <View className="h-9 w-9 rounded-full bg-purple-50 dark:bg-purple-900/20 items-center justify-center">
+                                            <MaterialIcons name="event" size={20} color="#a855f7" />
+                                        </View>
+                                        <Text className="text-sm font-semibold text-gray-700 dark:text-gray-200">List Due Date</Text>
+                                    </View>
+                                    <View className="flex-row items-center gap-2">
+                                        <Text className="text-sm text-gray-400 font-medium">No date</Text>
+                                        <MaterialIcons name="chevron-right" size={20} color="#cbd5e1" />
+                                    </View>
+                                </TouchableOpacity>
+                            </View>
+
+                            <Text className="text-xs text-gray-400 mt-4 px-1 text-center opacity-80">
+                                Advanced lists allow collaborative editing and due dates.
+                            </Text>
+                        </View>
+                    </View>
+
+                    {/* Footer */}
+                    <View className="p-6 pt-2 border-t border-transparent">
+                        {/* Create Button */}
+                        <TouchableOpacity
+                            className={`py-4 rounded-xl items-center justify-center shadow-lg shadow-blue-500/30 active:scale-[0.98] transition-all bg-primary`}
+                            onPress={handleCreate}
+                            disabled={!title.trim()}
+                            style={{ opacity: title.trim() ? 1 : 0.7 }}
+                        >
+                            <Text className="text-white font-bold text-lg">Create List</Text>
                         </TouchableOpacity>
                     </View>
 
-                    {step === 'selection' && renderSelectionStep()}
-                    {step === 'standard-form' && renderStandardForm()}
-                    {step === 'advanced-form' && renderAdvancedForm()}
-
-                    {/* Safe area spacer for bottom on iPhone X+ */}
                     <View className="h-8" />
-                </View>
-            </KeyboardAvoidingView>
+                </KeyboardAvoidingView>
+            </View>
         </Modal>
     );
 }

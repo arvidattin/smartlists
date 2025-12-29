@@ -27,7 +27,7 @@ export default function SignUp() {
             if (!session) {
                 Alert.alert('Please check your inbox for email verification!');
             } else {
-                // Setup profile or just redirect
+                router.replace('/(tabs)');
             }
             setLoading(false);
         }

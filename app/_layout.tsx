@@ -1,7 +1,10 @@
 import { Stack } from "expo-router";
 import "../global.css";
+import { useThemePersistence } from "../hooks/useThemePersistence";
 
 export default function RootLayout() {
+  useThemePersistence();
+
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />

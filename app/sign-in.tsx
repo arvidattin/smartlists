@@ -1,6 +1,7 @@
+import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Pressable, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../lib/supabase';
 
@@ -10,19 +11,21 @@ export default function SignIn() {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
 
+    const [errorMsg, setErrorMsg] = useState('');
+
     async function signInWithEmail() {
         setLoading(true);
+        setErrorMsg('');
         const { error } = await supabase.auth.signInWithPassword({
             email,
             password,
         });
 
         if (error) {
-            Alert.alert(error.message);
+            setErrorMsg(error.message);
             setLoading(false);
         } else {
-            // Auth listener in index/layout handles redirect, but we can double check
-            // router.replace('/(tabs)');
+            router.replace('/(tabs)');
             setLoading(false);
         }
     }
@@ -35,6 +38,12 @@ export default function SignIn() {
             </View>
 
             <View className="space-y-4">
+                {errorMsg ? (
+                    <View className="bg-red-50 border border-red-200 p-3 rounded-lg flex-row items-center">
+                        <MaterialIcons name="error-outline" size={20} color="#dc2626" />
+                        <Text className="text-red-700 ml-2 flex-1">{errorMsg}</Text>
+                    </View>
+                ) : null}
                 <View>
                     <Text className="text-sm font-medium text-gray-700 mb-1">Email</Text>
                     <TextInput
